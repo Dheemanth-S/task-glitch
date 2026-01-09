@@ -34,7 +34,6 @@ function AppContent() {
   const {
     loading,
     error,
-    metrics,
     derivedSorted,
     addTask,
     updateTask,
@@ -43,6 +42,7 @@ function AppContent() {
     clearLastDeleted,
     lastDeleted,
   } = useTasksContext();
+
   const handleCloseUndo = () => {
     clearLastDeleted();
   };
@@ -52,6 +52,7 @@ function AppContent() {
   const [fPriority, setFPriority] = useState<string>("All");
   const { user } = useUser();
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+
   const createActivity = useCallback(
     (type: ActivityItem["type"], summary: string): ActivityItem => ({
       id:
@@ -74,8 +75,9 @@ function AppContent() {
     });
   }, [derivedSorted, q, fStatus, fPriority]);
 
+  // ✅ FIXED TYPE HERE
   const handleAdd = useCallback(
-    (payload: Omit<Task, "id">) => {
+    (payload: Omit<Task, "id" | "createdAt">) => {
       addTask(payload);
       setActivity((prev) =>
         [createActivity("add", `Added: ${payload.title}`), ...prev].slice(0, 50)
@@ -83,6 +85,7 @@ function AppContent() {
     },
     [addTask, createActivity]
   );
+
   const handleUpdate = useCallback(
     (id: string, patch: Partial<Task>) => {
       updateTask(id, patch);
@@ -95,6 +98,7 @@ function AppContent() {
     },
     [updateTask, createActivity]
   );
+
   const handleDelete = useCallback(
     (id: string) => {
       deleteTask(id);
@@ -104,12 +108,14 @@ function AppContent() {
     },
     [deleteTask, createActivity]
   );
+
   const handleUndo = useCallback(() => {
     undoDelete();
     setActivity((prev) =>
       [createActivity("undo", "Undo delete"), ...prev].slice(0, 50)
     );
   }, [undoDelete, createActivity]);
+
   return (
     <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
@@ -142,12 +148,14 @@ function AppContent() {
               </Avatar>
             </Stack>
           </Stack>
+
           {loading && (
             <Stack alignItems="center" py={6}>
               <CircularProgress />
             </Stack>
           )}
           {error && <Alert severity="error">{error}</Alert>}
+
           {!loading && !error && (
             <MetricsBar
               metricsOverride={{
@@ -162,6 +170,7 @@ function AppContent() {
               }}
             />
           )}
+
           {!loading && !error && (
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -198,6 +207,7 @@ function AppContent() {
               </Select>
             </Stack>
           )}
+
           {!loading && !error && (
             <TaskTable
               tasks={filtered}
@@ -206,9 +216,11 @@ function AppContent() {
               onDelete={handleDelete}
             />
           )}
+
           {!loading && !error && <ChartsDashboard tasks={filtered} />}
           {!loading && !error && <AnalyticsDashboard tasks={filtered} />}
           {!loading && !error && <ActivityLog items={activity} />}
+
           <UndoSnackbar
             open={!!lastDeleted}
             onClose={handleCloseUndo}

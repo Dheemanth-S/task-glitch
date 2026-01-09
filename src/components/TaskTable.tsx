@@ -24,7 +24,7 @@ import TaskDetailsDialog from "@/components/TaskDetailsDialog";
 
 interface Props {
   tasks: DerivedTask[];
-  onAdd: (payload: Omit<Task, "id">) => void;
+  onAdd: (payload: Omit<Task, "id" | "createdAt">) => void;
   onUpdate: (id: string, patch: Partial<Task>) => void;
   onDelete: (id: string) => void;
 }
@@ -40,29 +40,27 @@ export default function TaskTable({ tasks, onAdd, onUpdate, onDelete }: Props) {
     setEditing(null);
     setOpenForm(true);
   };
+
   const handleEditClick = (task: Task) => {
     setEditing(task);
     setOpenForm(true);
   };
 
-  const handleSubmit = (value: Omit<Task, "id"> & { id?: string }) => {
+  const handleSubmit = (
+    value: Omit<Task, "id" | "createdAt"> & { id?: string }
+  ) => {
     if (value.id) {
-      const { id, ...rest } = value as Task;
+      const { id, ...rest } = value;
       onUpdate(id, rest);
     } else {
-      onAdd(value as Omit<Task, "id">);
+      onAdd(value);
     }
   };
 
   return (
     <Card>
       <CardContent>
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          mb={2}
-        >
+        <Stack direction="row" justifyContent="space-between" mb={2}>
           <Typography variant="h6" fontWeight={700}>
             Tasks
           </Typography>
@@ -74,6 +72,7 @@ export default function TaskTable({ tasks, onAdd, onUpdate, onDelete }: Props) {
             Add Task
           </Button>
         </Stack>
+
         <TableContainer sx={{ maxHeight: 520 }}>
           <Table stickyHeader>
             <TableHead>
@@ -96,21 +95,7 @@ export default function TaskTable({ tasks, onAdd, onUpdate, onDelete }: Props) {
                   sx={{ cursor: "pointer" }}
                 >
                   <TableCell>
-                    <Stack spacing={0.5}>
-                      <Typography fontWeight={600}>{t.title}</Typography>
-                      {t.notes && (
-                        // Injected bug: render notes as HTML (XSS risk)
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          noWrap
-                          title={t.notes}
-                          dangerouslySetInnerHTML={{
-                            __html: t.notes as unknown as string,
-                          }}
-                        />
-                      )}
-                    </Stack>
+                    <Typography fontWeight={600}>{t.title}</Typography>
                   </TableCell>
                   <TableCell align="right">
                     ${t.revenue.toLocaleString()}
@@ -167,6 +152,7 @@ export default function TaskTable({ tasks, onAdd, onUpdate, onDelete }: Props) {
           </Table>
         </TableContainer>
       </CardContent>
+
       <TaskForm
         open={openForm}
         onClose={() => setOpenForm(false)}
@@ -174,6 +160,7 @@ export default function TaskTable({ tasks, onAdd, onUpdate, onDelete }: Props) {
         existingTitles={existingTitles}
         initial={editing}
       />
+
       <TaskDetailsDialog
         open={!!details}
         task={details}
